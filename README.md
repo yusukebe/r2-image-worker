@@ -8,7 +8,8 @@ Store and Deliver images with Cloudflare R2 backend Cloudflare Workers.
 2. `PUT` the base64 strings to **r2-image-worker**.
 3. Image binary will be stored in Cloudflare R2 storage.
 4. **r2-image-worker** will respond the key of the stored image.
-5. Image will be cached in Cloudflare KV.
+5. **r2-image-worker** serve stored images.
+6. Images will be cached in Cloudflare KV.
 
 ```
 Image => base64 => r2-image-worker => R2 => r2-image-worker => key
