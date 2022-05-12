@@ -60,9 +60,11 @@ app.get('/:key', async (c) => {
     if (!object) return c.notFound()
     data = await object.arrayBuffer()
     contentType = object.httpMetadata.contentType
-    c.env.R2_IMAGE_KV.put(key, data, {
-      metadata: { contentType },
-    })
+    c.event.waitUntil(
+      c.env.R2_IMAGE_KV.put(key, data, {
+        metadata: { contentType },
+      })
+    )
   }
 
   return c.body(data, 200, {
