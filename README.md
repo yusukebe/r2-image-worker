@@ -4,15 +4,17 @@ Store and Deliver images with Cloudflare R2 backend Cloudflare Workers.
 
 ## Synopsis
 
+1. Deploy r2-image-worker to Cloudflare
 1. Make a base64 strings from the image file such as `.png`, `jpg`, or `gif`.
 2. `PUT` the base64 strings to **r2-image-worker**.
 3. Image binary will be stored in Cloudflare R2 storage.
-4. **r2-image-worker** will respond the key of the stored image.
-5. **r2-image-worker** serve stored images.
+4. **r2-image-worker** will respond the key of the stored image. `abcdef.png`
+5. **r2-image-worker** serve the images on `https://r2-image-worker.username.workers.dev/abcdef.png`
 6. Images will be cached in Cloudflare KV.
 
 ```
-Image => base64 => r2-image-worker => R2 => r2-image-worker => key
+User => Image => base64 => r2-image-worker => R2
+User <= Image <= r2-image-worker <= KV <= R2
 ```
 
 ## Prerequisites
