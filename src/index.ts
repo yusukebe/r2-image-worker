@@ -19,11 +19,9 @@ type MetaData = {
   contentType: string
 }
 
-export const app = new Hono<Env>()
-app.use('/upload', async (c, next) => {
-  if (c.req.method !== 'PUT') {
-    await next()
-  }
+const app = new Hono<Env>()
+
+app.put('/upload', async (c, next) => {
   const auth = basicAuth({ username: c.env.USER, password: c.env.PASS })
   await auth(c, next)
 })
