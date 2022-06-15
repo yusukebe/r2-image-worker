@@ -41,6 +41,18 @@ app.put('/upload', async (c) => {
   return c.text(key)
 })
 
+app.get('*', async (c, next) => {
+  const key = c.req.url
+  const cache = caches.default
+  const response = await cache.match(key)
+  if (!response) {
+    await next()
+    c.event.waitUntil(cache.put(key, c.res.clone()))
+  } else {
+    return response
+  }
+})
+
 app.get('/:key', async (c) => {
   const key = c.req.param('key')
 
@@ -48,16 +60,16 @@ app.get('/:key', async (c) => {
     type: 'arrayBuffer',
   })
 
-  let data: ArrayBuffer = res.value
+  let data: ArrayBuffer | null = res.value
   let contentType: string = ''
 
   if (data) {
-    contentType = res.metadata.contentType
+    contentType = res.metadata?.contentType || ''
   } else {
     const object = await c.env.BUCKET.get(key)
     if (!object) return c.notFound()
     data = await object.arrayBuffer()
-    contentType = object.httpMetadata.contentType
+    contentType = object.httpMetadata.contentType || ''
     c.event.waitUntil(
       c.env.R2_IMAGE_KV.put(key, data, {
         metadata: { contentType },
