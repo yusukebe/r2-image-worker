@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { sha256 } from 'hono/utils/crypto'
 import { basicAuth } from 'hono/basic-auth'
 import { detectType } from './utils'
-import { Buffer } from 'buffer'
 
 interface Env {
   BUCKET: R2Bucket
@@ -32,9 +31,10 @@ app.put('/upload', async (c) => {
   if (!base64) return c.notFound()
 
   const type = detectType(base64)
-  const body = Buffer.from(base64, 'base64')
-
   if (!type) return c.notFound()
+
+  const body = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+
   const key = (await sha256(body)) + '.' + type?.suffix
   await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type.mimeType } })
 
@@ -47,7 +47,7 @@ app.get('*', async (c, next) => {
   const response = await cache.match(key)
   if (!response) {
     await next()
-    c.event.waitUntil(cache.put(key, c.res.clone()))
+    c.event?.waitUntil(cache.put(key, c.res.clone()))
   } else {
     return response
   }
@@ -70,7 +70,7 @@ app.get('/:key', async (c) => {
     if (!object) return c.notFound()
     data = await object.arrayBuffer()
     contentType = object.httpMetadata.contentType || ''
-    c.event.waitUntil(
+    c.event?.waitUntil(
       c.env.R2_IMAGE_KV.put(key, data, {
         metadata: { contentType },
       })
