@@ -8,12 +8,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "buffer": "^6.0.3",
-    "hono": "^1.4.7"
+    "hono": "^1.5.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^3.10.0",
-    "miniflare": "2.4.0",
-    "wrangler": "^2.0.12"
+    "miniflare": "^2.5.0",
+    "wrangler": "^2.0.14"
   }
 }
