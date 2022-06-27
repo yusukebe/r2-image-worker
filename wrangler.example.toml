@@ -3,8 +3,6 @@ workers_dev = true
 
 compatibility_date = "2022-05-12"
 
-kv_namespaces = [ { binding = "R2_IMAGE_KV", id = "", preview_id = "" } ]
-
 [[r2_buckets]]
 binding = 'BUCKET'
 bucket_name = 'images'

@@ -10,11 +10,11 @@ Store and Deliver images with Cloudflare R2 backend Cloudflare Workers.
 3. Image binary will be stored in Cloudflare R2 storage.
 4. **r2-image-worker** will respond the key of the stored image. `abcdef.png`
 5. **r2-image-worker** serve the images on `https://r2-image-worker.username.workers.dev/abcdef.png`
-6. Images will be cached in Cloudflare KV.
+6. Images will be cached in Cloudflare CDN.
 
 ```
 User => Image => base64 => r2-image-worker => R2
-User <= Image <= r2-image-worker <= KV <= R2
+User <= Image <= r2-image-worker <= CDN Cache <= R2
 ```
 
 ## Prerequisites
@@ -22,6 +22,7 @@ User <= Image <= r2-image-worker <= KV <= R2
 * Cloudflare Account
 * Access privilege for Cloudflare R2 beta
 * Wrangler CLI
+* Custom domain (* Cache API is not available in `*.workers.dev` domain)
 
 ## Set up
 
@@ -39,16 +40,7 @@ Create R2 bucket:
 wrangler r2 bucket create images
 ```
 
-Create KV namespace:
-
-```
-wrangler kv:namespace create "R2_IMAGE_KV"
-wrangler kv:namespace create "R2_IMAGE_KV" --preview
-```
-
-
 Copy `wrangler.example.toml` to `wrangler.toml`:
-
 
 ```
 cp wrangler.example.toml wrangler.toml

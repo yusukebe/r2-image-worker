@@ -5,7 +5,6 @@ import { detectType } from './utils'
 
 interface Env {
   BUCKET: R2Bucket
-  R2_IMAGE_KV: KVNamespace
   USER: string
   PASS: string
 }
@@ -14,9 +13,7 @@ interface Data {
   body: string
 }
 
-type MetaData = {
-  contentType: string
-}
+const maxAge = 60 * 60 * 24 * 30
 
 const app = new Hono<Env>()
 
@@ -47,7 +44,7 @@ app.get('*', async (c, next) => {
   const response = await cache.match(key)
   if (!response) {
     await next()
-    c.event?.waitUntil(cache.put(key, c.res.clone()))
+    c.executionCtx?.waitUntil(cache.put(key, c.res.clone()))
   } else {
     return response
   }
@@ -56,28 +53,13 @@ app.get('*', async (c, next) => {
 app.get('/:key', async (c) => {
   const key = c.req.param('key')
 
-  const res = await c.env.R2_IMAGE_KV.getWithMetadata<MetaData>(key, {
-    type: 'arrayBuffer',
-  })
-
-  let data: ArrayBuffer | null = res.value
-  let contentType: string = ''
-
-  if (data) {
-    contentType = res.metadata?.contentType || ''
-  } else {
-    const object = await c.env.BUCKET.get(key)
-    if (!object) return c.notFound()
-    data = await object.arrayBuffer()
-    contentType = object.httpMetadata.contentType || ''
-    c.executionCtx?.waitUntil(
-      c.env.R2_IMAGE_KV.put(key, data, {
-        metadata: { contentType },
-      })
-    )
-  }
+  const object = await c.env.BUCKET.get(key)
+  if (!object) return c.notFound()
+  const data = await object.arrayBuffer()
+  const contentType = object.httpMetadata.contentType || ''
 
   return c.body(data, 200, {
+    'Cache-Control': `public, max-age=${maxAge}`,
     'Content-Type': contentType,
   })
 })
