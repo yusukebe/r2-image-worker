@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cache } from 'hono/cache'
 import { sha256 } from 'hono/utils/crypto'
 import { basicAuth } from 'hono/basic-auth'
 import { detectType } from './utils'
@@ -38,17 +39,12 @@ app.put('/upload', async (c) => {
   return c.text(key)
 })
 
-app.get('*', async (c, next) => {
-  const key = c.req.url
-  const cache = caches.default
-  const response = await cache.match(key)
-  if (!response) {
-    await next()
-    c.executionCtx?.waitUntil(cache.put(key, c.res.clone()))
-  } else {
-    return response
-  }
-})
+app.get(
+  '*',
+  cache({
+    cacheName: 'r2-image-worker',
+  })
+)
 
 app.get('/:key', async (c) => {
   const key = c.req.param('key')
