@@ -30,7 +30,7 @@ User <= Image <= r2-image-worker <= CDN Cache <= R2
 First, `git clone`
 
 ```
-git clone https://github.com/yusukebe/r2-iamge-worker.git
+git clone https://github.com/yusukebe/r2-image-worker.git
 cd r2-image-worker
 ```
 
