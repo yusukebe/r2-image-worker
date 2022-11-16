@@ -21,7 +21,11 @@ const app = new Hono<Env>()
 
 // app.use('*', basicAuth({ ...users[0]}))
 
-app.get('*', async (c, next) => {
+app.get('/', async (c, next) => {
+  const auth = basicAuth({username: c.env.USER, password: c.env.PASS, realm: 'hono'})
+  return await auth(c, next)
+})
+app.put('/', async (c, next) => {
   const auth = basicAuth({username: c.env.USER, password: c.env.PASS, realm: 'hono'})
   return await auth(c, next)
 })
@@ -67,7 +71,8 @@ app.get('/', (c) => {
       <h1 style="font-weight: lighter;">Welcome to R2ImageWorker</h1>
       <body>
         Paste your image here.
-      </body>
+                <p id="uploading"></p>
+        </body>
       <footer></footer>
       <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
       <script>
@@ -77,14 +82,16 @@ app.get('/', (c) => {
   var blob = items[0].getAsFile();
   var reader = new FileReader();
   reader.onload = function(event){
+    $("#uploading").text("Uploading...")
     $.ajax({
         url: '/upload',
         type: 'PUT',
         data: JSON.stringify({body: event.target.result}),
         success: function (data) {
             const image_url = 'https://${c.req.headers.get("host")}/image/' + data
-            document.body.innerHTML += '<hr><img src="' + image_url + '" />'
-            document.body.innerHTML += '<br>URL is: <a href="' + image_url + '">' + image_url + '</a>'
+            document.body.innerHTML += '<hr><img style="max-width:500px" src="' + image_url + '" />'
+            document.body.innerHTML += '<br>URL is: <a target="_blank" href="' + image_url + '">' + image_url + '</a>'
+            $("#uploading").text("")
         }
     })
     
