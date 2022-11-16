@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
-import { cache } from 'hono/cache'
-import { sha256 } from 'hono/utils/crypto'
-import { basicAuth } from 'hono/basic-auth'
-import { detectType } from './utils'
+import {Hono} from 'hono'
+import {sha256} from 'hono/utils/crypto'
+import {basicAuth} from 'hono/basic-auth'
+import {detectType} from './utils'
+
 
 interface Env {
   BUCKET: R2Bucket
@@ -18,35 +18,87 @@ const maxAge = 60 * 60 * 24 * 30
 
 const app = new Hono<Env>()
 
-app.put('/upload', async (c, next) => {
-  const auth = basicAuth({ username: c.env.USER, password: c.env.PASS })
-  await auth(c, next)
-})
 
+// app.use('*', basicAuth({ ...users[0]}))
+
+app.get('*', async (c, next) => {
+  const auth = basicAuth({username: c.env.USER, password: c.env.PASS, realm: 'hono'})
+  return await auth(c, next)
+})
 app.put('/upload', async (c) => {
   const data = await c.req.json<Data>()
   const base64 = data.body
   if (!base64) return c.notFound()
+  if (base64.startsWith('data:')) {
+    const type = base64.split(';')[0].split(':')[1].split('/')[1]
+    const image = Uint8Array.from(atob(base64.split(',')[1]), (c) => c.charCodeAt(0))
+    const mime_type = base64.split(';')[0].split(':')[1]
+    const key = (await sha256(image)) + '.' + type
+    await c.env.BUCKET.put(key, image, {httpMetadata: {contentType: mime_type}})
+    return c.text(key)
+  } else {
+    const type = detectType(base64)
+    if (!type) return c.notFound()
 
-  const type = detectType(base64)
-  if (!type) return c.notFound()
+    const body = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
 
-  const body = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+    const key = (await sha256(body)) + '.' + type?.suffix
+    await c.env.BUCKET.put(key, body, {httpMetadata: {contentType: type.mimeType}})
 
-  const key = (await sha256(body)) + '.' + type?.suffix
-  await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type.mimeType } })
-
-  return c.text(key)
+    return c.text(key)
+  }
 })
 
-app.get(
-  '*',
-  cache({
-    cacheName: 'r2-image-worker',
-  })
-)
+app.get('/', (c) => {
+  return c.html(`
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>R2ImageWorker</title>
+        <style>
+            body {
+                text-align: center;
+                font-family: "PT Mono";
+                font-style: italic;
+                margin-top: 10px;
+            }
+        </style>
+      </head>
+      <h1 style="font-weight: lighter;">Welcome to R2ImageWorker</h1>
+      <body>
+        Paste your image here.
+      </body>
+      <footer></footer>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+      <script>
+        // window.addEventListener('paste', ... or
+    document.onpaste = function(event){
+  var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  var blob = items[0].getAsFile();
+  var reader = new FileReader();
+  reader.onload = function(event){
+    $.ajax({
+        url: '/upload',
+        type: 'PUT',
+        data: JSON.stringify({body: event.target.result}),
+        success: function (data) {
+            const image_url = 'https://${c.req.headers.get("host")}/image/' + data
+            document.body.innerHTML += '<hr><img src="' + image_url + '" />'
+            document.body.innerHTML += '<br>URL is: <a href="' + image_url + '">' + image_url + '</a>'
+        }
+    })
+    
+  }
+  
+  reader.readAsDataURL(blob);
+}
 
-app.get('/:key', async (c) => {
+</script>
+    </html>
+  `)
+})
+
+app.get('/image/:key', async (c) => {
   const key = c.req.param('key')
 
   const object = await c.env.BUCKET.get(key)
