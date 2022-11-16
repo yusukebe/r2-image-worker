@@ -55,13 +55,13 @@ Edit `wrangler.toml`.
 
 Secret variables are:
 
-- `NAME` - User name of basic auth
+- `USER` - User name of basic auth
 - `PASS` - User password of basic auth
 
 To set these, use `wrangler secret put` command:
 
 ```bash
-wrangler secret put NAME
+wrangler secret put USER
 ```
 
 ## Publish
@@ -92,6 +92,20 @@ Value of `body` is Basic64 string of image binary.
 {
   "body": "Base64 Text..."
 }
+```
+### Test
+1. Download a simple image
+```
+wget  https://www.bing.com/th?id=OHR.Unesco50_ZH-CN3652927413_UHD.jpg -O /tmp/1.jpg
+```
+2. Upload to u endpoint.
+```
+echo '{"body" : "'"$( cat /tmp/1.jpg | base64)"'"}' |
+curl -XPUT -H "Content-Type: application/json" -d @-  https://change_user_here:change_pass_here@change_url_here/upload -vvv
+```
+3. Visit the image
+```
+https://change_user_here:change_pass_here@change_url_here/image_returned_in_step2
 ```
 
 ## Use with Shortcuts
