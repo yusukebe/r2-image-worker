@@ -4,13 +4,13 @@ Store and Deliver images with Cloudflare R2 backend Cloudflare Workers.
 
 ## Synopsis
 
-1. Deploy r2-image-worker to Cloudflare
-1. Make a base64 strings from the image file such as `.png`, `jpg`, or `gif`.
+1. Deploy **r2-image-worker** to Cloudflare Workers.
+1. Make base64 strings from the image file such as `.png`, `jpg`, or `gif`.
 2. `PUT` the base64 strings to **r2-image-worker**.
-3. Image binary will be stored in Cloudflare R2 storage.
+3. An image binary will be stored in Cloudflare R2 storage.
 4. **r2-image-worker** will respond the key of the stored image. `abcdef.png`
 5. **r2-image-worker** serve the images on `https://r2-image-worker.username.workers.dev/abcdef.png`
-6. Images will be cached in Cloudflare CDN.
+6. Images will be cached on Cloudflare CDN.
 
 ```
 User => Image => base64 => r2-image-worker => R2
@@ -20,9 +20,8 @@ User <= Image <= r2-image-worker <= CDN Cache <= R2
 ## Prerequisites
 
 * Cloudflare Account
-* Access privilege for Cloudflare R2 beta
 * Wrangler CLI
-* Custom domain (* Cache API is not available in `*.workers.dev` domain)
+* (Custom domain * Cache API is not available in `*.workers.dev` domain)
 
 ## Set up
 
@@ -94,15 +93,21 @@ Value of `body` is Basic64 string of image binary.
 }
 ```
 ### Test
+
 1. Download a simple image
+
 ```
 wget  https://www.bing.com/th?id=OHR.Unesco50_ZH-CN3652927413_UHD.jpg -O /tmp/1.jpg
 ```
+
 2. Upload to u endpoint.
+
 ```
 echo '{"body" : "'"$( cat /tmp/1.jpg | base64)"'"}' | curl -XPUT -H "Content-Type: application/json" -d @-  https://change_user_here:change_pass_here@change_url_here/upload -vvv
 ```
+
 3. Visit the image
+
 ```
 https://change_user_here:change_pass_here@change_url_here/image_returned_in_step2
 ```
@@ -115,7 +120,7 @@ Awesome!!!
 
 Setting shortcuts like this:
 
-![Screenshot](https://r2-image-worker.yusukebe.workers.dev/6b371c81284926f01c7af462a1d67c287fed94049570704048eb3ca09097b2c8.png)
+![Screenshot](https://github.com/yusukebe/r2-image-worker/assets/10682/4b028fdd-6852-42f7-8f0d-5de5e38b631b)
 
 ## Author
 
