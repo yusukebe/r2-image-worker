@@ -5,3 +5,4 @@ package-lock.json
 yarn.lock
 .cargo-ok
 wrangler.toml
+yarn-error.log

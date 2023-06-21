@@ -1,22 +1,22 @@
-import { Hono } from 'hono'
+import { Hono } from 'hono/quick'
 import { cache } from 'hono/cache'
 import { sha256 } from 'hono/utils/crypto'
 import { basicAuth } from 'hono/basic-auth'
 import { detectType } from './utils'
 
-interface Env {
+type Bindings = {
   BUCKET: R2Bucket
   USER: string
   PASS: string
 }
 
-interface Data {
+type Data = {
   body: string
 }
 
 const maxAge = 60 * 60 * 24 * 30
 
-const app = new Hono<Env>()
+const app = new Hono<{ Bindings: Bindings }>()
 
 app.put('/upload', async (c, next) => {
   const auth = basicAuth({ username: c.env.USER, password: c.env.PASS })
@@ -42,7 +42,7 @@ app.put('/upload', async (c) => {
 app.get(
   '*',
   cache({
-    cacheName: 'r2-image-worker',
+    cacheName: 'r2-image-worker'
   })
 )
 
@@ -52,11 +52,11 @@ app.get('/:key', async (c) => {
   const object = await c.env.BUCKET.get(key)
   if (!object) return c.notFound()
   const data = await object.arrayBuffer()
-  const contentType = object.httpMetadata.contentType || ''
+  const contentType = object.httpMetadata?.contentType ?? ''
 
   return c.body(data, 200, {
     'Cache-Control': `public, max-age=${maxAge}`,
-    'Content-Type': contentType,
+    'Content-Type': contentType
   })
 })
 
