@@ -12,6 +12,8 @@ type Bindings = {
 
 type Data = {
   body: string
+  width?: string
+  height?: string
 }
 
 const maxAge = 60 * 60 * 24 * 30
@@ -33,7 +35,14 @@ app.put('/upload', async (c) => {
 
   const body = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
 
-  const key = (await sha256(body)) + '.' + type?.suffix
+  let key
+
+  if (data.width && data.height) {
+    key = (await sha256(body)) + `_${data.width}x${data.height}` + '.' + type?.suffix
+  } else {
+    key = (await sha256(body)) + '.' + type?.suffix
+  }
+
   await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type.mimeType } })
 
   return c.text(key)
