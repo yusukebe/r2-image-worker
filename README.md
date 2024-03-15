@@ -122,6 +122,9 @@ Setting shortcuts like this:
 
 ![Screenshot](https://github.com/yusukebe/r2-image-worker/assets/10682/4b028fdd-6852-42f7-8f0d-5de5e38b631b)
 
+Shared shortcut: [Upload to Cloudflare](https://www.icloud.com/shortcuts/ab8f7d71e941461ea9e77b680e04bc4d).
+Prior to utilizing it, input the domain and user:pass into the designated text field.
+
 ## Author
 
 Yusuke Wada <https://github.com/yusukebe>
