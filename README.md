@@ -1,52 +1,49 @@
 # r2-image-worker
 
-Store and Deliver images with Cloudflare R2 backend Cloudflare Workers.
+Store and deliver images with Cloudflare R2 backend Cloudflare Workers.
 
 ## Synopsis
 
 1. Deploy **r2-image-worker** to Cloudflare Workers.
-1. Make base64 strings from the image file such as `.png`, `jpg`, or `gif`.
-2. `PUT` the base64 strings to **r2-image-worker**.
-3. An image binary will be stored in Cloudflare R2 storage.
+2. `PUT` your image file to **r2-image-worker**.
+3. The image file will be stored in Cloudflare R2 storage.
 4. **r2-image-worker** will respond the key of the stored image. `abcdef.png`
 5. **r2-image-worker** serve the images on `https://r2-image-worker.username.workers.dev/abcdef.png`
 6. Images will be cached on Cloudflare CDN.
 
-```
-User => Image => base64 => r2-image-worker => R2
+```plain
+User => Image => r2-image-worker => R2
 User <= Image <= r2-image-worker <= CDN Cache <= R2
 ```
 
 ## Prerequisites
 
-* Cloudflare Account
-* Wrangler CLI
-* (Custom domain * Cache API is not available in `*.workers.dev` domain)
+- Cloudflare Account
+- Wrangler CLI
+- (Custom domain _Cache API is not available in `_.workers.dev` domain\_)
 
 ## Set up
 
-
 First, `git clone`
 
-```
+```plain
 git clone https://github.com/yusukebe/r2-image-worker.git
 cd r2-image-worker
 ```
 
 Create R2 bucket:
 
-```
+```plain
 wrangler r2 bucket create images
 ```
 
 Copy `wrangler.example.toml` to `wrangler.toml`:
 
-```
+```plain
 cp wrangler.example.toml wrangler.toml
 ```
 
 Edit `wrangler.toml`.
-
 
 ## Variables
 
@@ -79,51 +76,60 @@ Header:
 
 To pass the Basic Auth, add the Base64 string of "user:pass" to `Authorization` header.
 
-```
+```plain
 Authorization: Basic ...
 ```
 
 Body:
 
-Value of `body` is Basic64 string of image binary.
+Value of `body` should be a `Form` contains an image binary and a width and a height.
 
-```json
-{
-  "body": "Base64 Text..."
-}
-```
+- image: `File`
+- width: `string` (optional)
+- height: `string` (optional)
+
 ### Test
 
 1. Download a simple image
 
-```
-wget  https://www.bing.com/th?id=OHR.Unesco50_ZH-CN3652927413_UHD.jpg -O /tmp/1.jpg
+```bash
+wget https://hono.dev/images/hono-kawaii.png -O /tmp/1.jpg
 ```
 
 2. Upload to u endpoint.
 
-```
-echo '{"body" : "'"$( cat /tmp/1.jpg | base64)"'"}' | curl -XPUT -H "Content-Type: application/json" -d @-  https://change_user_here:change_pass_here@change_url_here/upload -vvv
+```bash
+curl -X PUT \
+  -F "image=@/tmp/1.jpg" \
+  https://change_user_here:change_pass_here@change_url_here/upload \
+  -vvv
 ```
 
 3. Visit the image
 
-```
+```bash
 https://change_user_here:change_pass_here@change_url_here/image_returned_in_step2
 ```
 
-## Use with Shortcuts
+## Tips
+
+### Using Cloudflare Images
+
+You can deliver your images via [Cloudflare Images](https://developers.cloudflare.com/images/) if you are using a custom domain.
+
+```plain
+https://<ZONE>/cdn-cgi/image/format=auto,width=800,quality=75/<SOURCE-IMAGE>
+```
+
+### Using with Shortcuts
 
 Awesome!!!
 
-![SS](https://user-images.githubusercontent.com/10682/167978838-b3ef2d72-81ac-4058-b161-ccb2b4f0bc16.gif)
+![Screen cast](https://github.com/user-attachments/assets/c9239e96-dce9-45ba-aa07-a94aa53b3ba7)
 
 Setting shortcuts like this:
 
-![Screenshot](https://github.com/yusukebe/r2-image-worker/assets/10682/4b028fdd-6852-42f7-8f0d-5de5e38b631b)
-
-Shared shortcut: [Upload to Cloudflare](https://www.icloud.com/shortcuts/ab8f7d71e941461ea9e77b680e04bc4d).
-Prior to utilizing it, input the domain and user:pass into the designated text field.
+![Screenshot](https://ss.yusukebe.com/cdn-cgi/image/format=auto,quality=90/44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a_1530x2366.png)
 
 ## Author
 
