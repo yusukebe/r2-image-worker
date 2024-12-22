@@ -2,18 +2,12 @@ import { Hono } from 'hono/quick'
 import { cache } from 'hono/cache'
 import { sha256 } from 'hono/utils/crypto'
 import { basicAuth } from 'hono/basic-auth'
-import { detectType } from './utils'
+import { getExtension } from 'hono/utils/mime'
 
 type Bindings = {
   BUCKET: R2Bucket
   USER: string
   PASS: string
-}
-
-type Data = {
-  body: string
-  width?: string
-  height?: string
 }
 
 const maxAge = 60 * 60 * 24 * 30
@@ -26,24 +20,21 @@ app.put('/upload', async (c, next) => {
 })
 
 app.put('/upload', async (c) => {
-  const data = await c.req.json<Data>()
-  const base64 = data.body
-  if (!base64) return c.notFound()
+  const data = await c.req.parseBody<{ image: File; width: string; height: string }>()
 
-  const type = detectType(base64)
-  if (!type) return c.notFound()
-
-  const body = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+  const body = data.image
+  const type = data.image.type
+  const extension = getExtension(type) ?? 'png'
 
   let key
 
   if (data.width && data.height) {
-    key = (await sha256(body)) + `_${data.width}x${data.height}` + '.' + type?.suffix
+    key = (await sha256(body)) + `_${data.width}x${data.height}` + '.' + extension
   } else {
-    key = (await sha256(body)) + '.' + type?.suffix
+    key = (await sha256(body)) + '.' + extension
   }
 
-  await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type.mimeType } })
+  await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type } })
 
   return c.text(key)
 })
