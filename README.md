@@ -20,7 +20,7 @@ User <= Image <= r2-image-worker <= CDN Cache <= R2
 
 - Cloudflare Account
 - Wrangler CLI
-- (Custom domain - _Cache API is not available in `.workers.dev` domain_)
+- _Optional: Custom domain - (Cache API is not available in `.workers.dev` domain)_
 
 ## Set up
 
