@@ -10,10 +10,7 @@
       "preview_bucket_name": "images"
     }
   ],
-  "placement": {
-    "mode": "smart"
-  },
-  "observability": {
-    "enabled": true
+  "images": {
+    "binding": "IMAGES",
   }
 }
