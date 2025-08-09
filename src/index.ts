@@ -4,15 +4,9 @@ import { sha256 } from 'hono/utils/crypto'
 import { basicAuth } from 'hono/basic-auth'
 import { getExtension } from 'hono/utils/mime'
 
-type Bindings = {
-  BUCKET: R2Bucket
-  USER: string
-  PASS: string
-}
-
 const maxAge = 60 * 60 * 24 * 30
 
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono<{ Bindings: Cloudflare.Env }>()
 
 app.put('/upload', async (c, next) => {
   const auth = basicAuth({ username: c.env.USER, password: c.env.PASS })
@@ -29,9 +23,9 @@ app.put('/upload', async (c) => {
   let key
 
   if (data.width && data.height) {
-    key = (await sha256(body)) + `_${data.width}x${data.height}` + '.' + extension
+    key = (await sha256(await body.text())) + `_${data.width}x${data.height}` + '.' + extension
   } else {
-    key = (await sha256(body)) + '.' + extension
+    key = (await sha256(await body.text())) + '.' + extension
   }
 
   await c.env.BUCKET.put(key, body, { httpMetadata: { contentType: type } })

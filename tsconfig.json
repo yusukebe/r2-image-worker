@@ -9,8 +9,5 @@
     "lib": [
       "esnext"
     ],
-    "types": [
-      "@cloudflare/workers-types",
-    ],
   },
 }
