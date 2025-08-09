@@ -37,13 +37,13 @@ Create R2 bucket:
 wrangler r2 bucket create images
 ```
 
-Copy `wrangler.example.toml` to `wrangler.toml`:
+Copy `wrangler.example.jsonc` to `wrangler.jsonc`:
 
 ```plain
-cp wrangler.example.toml wrangler.toml
+cp wrangler.example.jsonc wrangler.jsonc
 ```
 
-Edit `wrangler.toml`.
+Edit `wrangler.jsonc`.
 
 ## Variables
 
