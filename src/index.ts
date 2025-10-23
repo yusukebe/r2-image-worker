@@ -66,8 +66,10 @@ app.get('/:key', async (c) => {
   if (!object) return c.notFound()
   const contentType = object.httpMetadata?.contentType ?? ''
 
-  if (c.env.IMAGES) {
-    const schemaResult = imageParameterSchema.safeParse(c.req.query())
+  const query = c.req.query()
+
+  if (Object.keys(query).length !== 0 && c.env.IMAGES) {
+    const schemaResult = imageParameterSchema.safeParse(query)
     if (schemaResult.success) {
       const preferredContentType = getPreferredContentType(c.req.header('Accept'), contentType)
       const parameters = schemaResult.data
